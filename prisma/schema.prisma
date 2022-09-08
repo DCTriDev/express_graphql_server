@@ -1,0 +1,169 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int              @id @default(autoincrement())
+  username       String           @unique
+  password       String
+  profile        Profile?
+  userRole       UserRole?
+  accountBalance AccountBalance?
+  purchasedMovie PurchasedMovie[]
+}
+
+model Role {
+  id       Int        @id @default(autoincrement())
+  roleName String     @unique
+  userRole UserRole[]
+}
+
+model UserRole {
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
+  roleId Int
+  role   Role @relation(fields: [roleId], references: [id])
+
+  @@id([userId, roleId])
+}
+
+model Profile {
+  userId      Int      @id @unique
+  avatar      String
+  fullName    String
+  genderId    Int
+  email       String   @unique
+  phoneNumber String   @unique
+  birthday    DateTime
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  gender      Gender   @relation(fields: [genderId], references: [id])
+}
+
+model Gender {
+  id      Int       @id @default(autoincrement())
+  gender  String    @unique
+  Profile Profile[]
+  Actor Actor[]
+}
+
+model AccountBalance {
+  userId    Int      @id @unique
+  balance   Int      @default(50)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Movie {
+  id              Int               @id @default(autoincrement())
+  image           String
+  title           String            @unique
+  director        String
+  trailer         String
+  description     String
+  releaseDate     DateTime
+  movieType            MovieType         @relation(fields: [movieTypeId], references: [id])
+  movieStatus          MovieStatus?      @relation(fields: [movieStatusId], references: [id])
+  price           Int
+  createdAt       DateTime          @default(now())
+  movieCast       MovieCast[]
+  categoryToMovie CategoryToMovie[]
+  purchasedMovie  PurchasedMovie[]
+  movieOnSale     MovieOnSale?
+  movieTypeId     Int
+  movieStatusId   Int?
+  movieSource     MovieSource[]
+}
+
+model MovieStatus {
+  id     Int     @id @default(autoincrement())
+  status String  @unique
+  Movie  Movie[]
+}
+
+model MovieType {
+  id    Int     @id @default(autoincrement())
+  type  String  @unique
+  Movie Movie[]
+}
+
+model MovieSource {
+  id           Int    @id @default(autoincrement())
+  movieId      Int
+  detailSource String
+  source       String
+  movie        Movie  @relation(fields: [movieId], references: [id])
+}
+
+model MovieOnSale {
+  movieId    Int   @id @unique
+  price      Int
+  percentage Int
+  movie      Movie @relation(fields: [movieId], references: [id])
+}
+
+model Category {
+  id              Int               @id @default(autoincrement())
+  categoryName    String            @unique
+  categoryToMovie CategoryToMovie[]
+}
+
+model CategoryToMovie {
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id])
+  movieId    Int
+  movie      Movie    @relation(fields: [movieId], references: [id])
+
+  @@id([categoryId, movieId])
+}
+
+model Actor {
+  id        Int         @id @default(autoincrement())
+  name      String      @unique
+  image     String
+  genderId Int
+  birthday  DateTime
+  createdAt DateTime    @default(now())
+  movieCast MovieCast[]
+  gender Gender @relation(fields: [genderId], references: [id])
+}
+
+model MovieCast {
+  actorId Int
+  actor   Actor @relation(fields: [actorId], references: [id])
+  movieId Int
+  movie   Movie @relation(fields: [movieId], references: [id])
+
+  @@id([actorId, movieId])
+}
+
+model PurchasedMovie {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  movieId   Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  movie     Movie    @relation(fields: [movieId], references: [id])
+}
+
+model PromoType {
+  id    Int     @id @default(autoincrement())
+  type  String
+  promo Promo[]
+}
+
+model Promo {
+  id        Int       @id @default(autoincrement())
+  code      String    @unique
+  typeId    Int
+  value     Int
+  promoType PromoType @relation(fields: [typeId], references: [id])
+}
